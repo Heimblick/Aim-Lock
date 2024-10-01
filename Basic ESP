@@ -1,0 +1,69 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Create a function to create a BillboardGui for player names
+local function createPlayerNameTag(player)
+    local nameTag = Instance.new("BillboardGui")
+    nameTag.Size = UDim2.new(1, 0, 1, 0)
+    nameTag.Adornee = player.Character.Head
+    nameTag.AlwaysOnTop = true
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.new(1, 1, 1) -- White text
+    textLabel.TextScaled = true
+    textLabel.Text = player.Name
+
+    textLabel.Parent = nameTag
+    nameTag.Parent = player.Character.Head
+end
+
+-- Highlight all players and create name tags
+local function highlightPlayers()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            -- Create a name tag for each player
+            createPlayerNameTag(player)
+
+            -- Highlight the player
+            local highlight = Instance.new("Highlight")
+            highlight.Adornee = player.Character
+            highlight.FillColor = Color3.new(1, 1, 0) -- Yellow fill
+            highlight.FillTransparency = 0.5
+            highlight.OutlineColor = Color3.new(0, 0, 0) -- Black outline
+            highlight.OutlineTransparency = 0.5
+            highlight.Parent = player.Character
+        end
+    end
+end
+
+-- Clear highlights when players leave
+local function clearHighlights()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character then
+            local highlight = player.Character:FindFirstChildOfClass("Highlight")
+            if highlight then
+                highlight:Destroy()
+            end
+
+            local nameTag = player.Character.Head:FindFirstChildOfClass("BillboardGui")
+            if nameTag then
+                nameTag:Destroy()
+            end
+        end
+    end
+end
+
+-- Connect functions to player events
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        highlightPlayers()
+    end)
+end)
+
+Players.PlayerRemoving:Connect(clearHighlights)
+
+-- Initial highlight for existing players
+highlightPlayers()
