@@ -1,0 +1,48 @@
+local player = game.Players.LocalPlayer
+local camera = game.Workspace.CurrentCamera
+local inputService = game:GetService("UserInputService")
+local players = game:GetService("Players")
+
+-- Function to find the nearest player
+local function getNearestPlayer()
+    local nearestPlayer = nil
+    local shortestDistance = math.huge
+    
+    for _, otherPlayer in pairs(players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local distance = (player.Character.HumanoidRootPart.Position - otherPlayer.Character.HumanoidRootPart.Position).Magnitude
+            
+            if distance < shortestDistance then
+                nearestPlayer = otherPlayer
+                shortestDistance = distance
+            end
+        end
+    end
+    
+    return nearestPlayer
+end
+
+-- Lock the camera on the nearest player
+local function lockCameraOnPlayer()
+    local nearestPlayer = getNearestPlayer()
+    
+    if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        camera.CameraSubject = nearestPlayer.Character.Humanoid
+        camera.CameraType = Enum.CameraType.Scriptable
+    end
+end
+
+-- Detect when "Q" is pressed
+inputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Q then
+        lockCameraOnPlayer()
+    end
+end)
+
+-- Reset the camera when "Q" is released
+inputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Q then
+        camera.CameraSubject = player.Character.Humanoid
+        camera.CameraType = Enum.CameraType.Custom
+    end
+end)
