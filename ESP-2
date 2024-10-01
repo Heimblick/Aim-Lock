@@ -1,0 +1,102 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local Camera = workspace.CurrentCamera
+
+-- Create a function to create a BillboardGui for player names
+local function createPlayerNameTag(player)
+    local nameTag = Instance.new("BillboardGui")
+    nameTag.Size = UDim2.new(1, 0, 1, 0)
+    nameTag.Adornee = player.Character.Head
+    nameTag.AlwaysOnTop = true
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.new(1, 1, 1) -- White text
+    textLabel.TextScaled = true
+    textLabel.Text = player.Name
+
+    textLabel.Parent = nameTag
+    nameTag.Parent = player.Character.Head
+end
+
+-- Function to create a rainbow box around a player
+local function createRainbowBox(player)
+    local box = Instance.new("Part")
+    box.Size = Vector3.new(4, 6, 4) -- Adjust size as needed
+    box.Anchored = true
+    box.CanCollide = false
+    box.Transparency = 0.5
+    box.Parent = workspace
+
+    -- Attach the box to the player's position
+    box.CFrame = player.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 0)
+
+    -- Tweening colors for rainbow effect
+    local colors = {Color3.fromRGB(255, 0, 0), Color3.fromRGB(255, 127, 0), Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255), Color3.fromRGB(75, 0, 130), Color3.fromRGB(148, 0, 211)}
+    
+    while true do
+        for _, color in ipairs(colors) do
+            box.Color = color
+            wait(0.5) -- Adjust speed of color change here
+        end
+    end
+end
+
+-- Highlight all players and create name tags
+local function highlightPlayers()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            -- Create a name tag for each player
+            createPlayerNameTag(player)
+
+            -- Create a rainbow box around the player
+            createRainbowBox(player)
+
+            -- Highlight the player
+            local highlight = Instance.new("Highlight")
+            highlight.Adornee = player.Character
+            highlight.FillColor = Color3.new(1, 1, 0) -- Yellow fill
+            highlight.FillTransparency = 0.5
+            highlight.OutlineColor = Color3.new(0, 0, 0) -- Black outline
+            highlight.OutlineTransparency = 0.5
+            highlight.Parent = player.Character
+        end
+    end
+end
+
+-- Clear highlights when players leave
+local function clearHighlights()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character then
+            local highlight = player.Character:FindFirstChildOfClass("Highlight")
+            if highlight then
+                highlight:Destroy()
+            end
+
+            local nameTag = player.Character.Head:FindFirstChildOfClass("BillboardGui")
+            if nameTag then
+                nameTag:Destroy()
+            end
+
+            -- Remove the rainbow box if it exists
+            local box = workspace:FindFirstChild(player.Name .. "_RainbowBox")
+            if box then
+                box:Destroy()
+            end
+        end
+    end
+end
+
+-- Connect functions to player events
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        highlightPlayers()
+    end)
+end)
+
+Players.PlayerRemoving:Connect(clearHighlights)
+
+-- Initial highlight for existing players
+highlightPlayers()
